@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Memory allocation algorithms</title>
+  <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-KK94CHFLLe+nY2dmCWGMq91rCGa5gtU4mk92HdvYe+M/SXH301p5ILy+dN9+nJOZ" crossorigin="anonymous">
+
+  <style type="text/css">
+     .circles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.circles li {
+  position: absolute;
+  display: block;
+  list-style: none;
+  width: 20px;
+  /* border-radius: 50%!important; */
+  height: 20px;
+  background: pink;
+  animation: animate 25s linear infinite;
+  bottom: -150px;
+}
+
+.circles li:nth-child(1) {
+  left: 5%;
+  width: 50px;
+  height: 50px;
+  animation-delay: 0s;
+}
+
+.circles li:nth-child(2) {
+  left: 10%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 2s;
+  animation-duration: 12s;
+}
+
+.circles li:nth-child(3) {
+  left: 6%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 4s;
+}
+
+.circles li:nth-child(4) {
+  left: 89%;
+  width: 60px;
+  height: 60px;
+  animation-delay: 0s;
+  animation-duration: 18s;
+}
+
+.circles li:nth-child(5) {
+  left: 90%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 0s;
+}
+
+.circles li:nth-child(6) {
+  left: 85%;
+  width: 10px;
+  height: 10px;
+  animation-delay: 3s;
+}
+
+.circles li:nth-child(7) {
+  left: 5%;
+  width: 50px;
+  height: 50px;
+  animation-delay: 7s;
+}
+
+.circles li:nth-child(8) {
+  left: 10%;
+  width: 25px;
+  height: 25px;
+  animation-delay: 15s;
+  animation-duration: 45s;
+}
+
+.circles li:nth-child(9) {
+  left: 100%;
+  width: 15px;
+  height: 15px;
+  animation-delay: 2s;
+  animation-duration: 35s;
+}
+
+.circles li:nth-child(10) {
+  left: 95%;
+  width: 50px;
+  height: 50px;
+  animation-delay: 0s;
+  animation-duration: 11s;
+}
+
+@keyframes animate {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 0.8;
+    border-radius: 0;
+  }
+
+  100% {
+    transform: translateY(-1000px) rotate(720deg);
+    opacity: 0;
+    border-radius: 50%;
+  }
+}
+
+
+
+
+    body{
+      margin:0;
+      padding:0;
+      font-family: Arial,sans-serif;
+    }
+    .main{
+      display:flex;
+      justify-content: space-around;
+      align-items: center;
+      height:100vh;
+    }
+    #column{
+      width:auto;
+      max-height:80vh;
+      display: flex;
+      flex-direction: column;
+      border:1px solid #a6a6a6;
+      border-radius: 5px;
+      align-items: center;
+      justify-content: space-around;
+    }
+    
+    #column:first-child{
+      background: red;
+    }
+    
+    .frag{
+      width:100%;
+      background: lightgreen;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .block{
+      width:100px;
+      margin:10px;
+      border: 1px solid  #cccccc;
+      border-radius: 5px;
+      background: #f2f2f2;
+      text-align: center;
+      display:flex;
+      align-items: flex-start;
+      justify-content: center;
+      overflow: hidden;
+    }
+    
+    select{
+      height:75px;
+      width:150px;
+      margin:10px 0;
+      font-size: 20px;
+      text-align: center;
+    }
+    
+    button{
+      margin:10px 0;
+      border:none;
+      width:150px;
+      height:75px;
+      font-size: 20px;
+      cursor: pointer;
+    }
+    
+    button:hover{
+      background: darkgray;
+    }
+    dialog{
+      position:absolute;
+      align-self:flex-start;
+      margin-top:5vh;
+      background: tomato;
+      border:1px solid red;
+      border-radius:5px;
+    }
+    .highlight{
+      border:0.5px solid red;
+    }
+    .green{
+      border: 0.5px solid green;
+      background: lightgreen;
+    }
+    
+    input{
+      font-size:24px;
+      line-height: 35px;
+      height:35px;
+      padding:5px;
+      width:300px;
+    }
+    
+    input:focus{
+      outline: none;
+    }
+    
+    .inputDiv label{
+      display: inline-block;
+      font-size: 24px;
+      width:250px;
+      text-align: center;
+    }
+    
+    .inputDiv{
+      margin-top: 10px;
+    }
+    
+    .buttons{
+      margin-top:20px;
+      display: flex;
+      gap:25px;
+      justify-content: center;
+    }
+    
+    #processCreator{
+      margin-top:20px;
+    }
+    
+    #displayFrag{
+      font-size: 24px;
+    }
+    
+  </style>
+</head>
+<body>
+
+
+<div class="container">
+      <ul class="circles">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </div>
+
+<nav class="navbar navbar-expand-lg bg-body-tertiary">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">OS Lab</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="navbarNav">
+      <ul class="navbar-nav">
+        <li class="nav-item">
+          <a class="nav-link active" aria-current="page" href="mainhome.html">Home</a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" href="#">About</a>
+        </li>
+      
+      </ul>
+    </div>
+  </div>
+</nav>
+ 
+
+  
+<div class="heading">
+<h1 align="center" style="margin-top: 130px; margin-bottom: 10px;">Page Fitting Techniques</h1> 
+</div>
+
+
+  <div class='main'>
+  <dialog open id="inputError" style='display:none;'>Input is empty!!!</dialog>
+
+  <div class='inputDiv'>
+    <div>
+    <label for='array-input'>Enter available holes:</label>
+    <input type="text" id='array-input' name="" placeholder="Enter array..." />
+  </div>
+  
+  <div class='buttons'>
+    <select id="sim">
+      <option>First fit</option>
+      <option>Best fit</option>
+      <option>Worst fit</option>
+    </select>
+    <button onclick="processArray()" style="background-color: pink;">Create Memory</button>
+    
+    <button onclick="showProcessCreator()" style="background-color: pink;">Create New Process</button>
+    <button onclick="showProcessRemover()" style="background-color: pink;">Remove Process</button>
+  </div>
+  <div id="processRemover" style="display:none">
+    <div class='inputDiv'>
+      <label for='array-input'>Enter process name:</label>
+      <input type="text" name="" id="processNameRemove">
+      <div class='buttons'>
+      <button onclick="removeProcess()">Remove</button>
+    </div>
+    </div>
+  </div>
+    <div id='processCreator' style="display:none;">
+      <div class='inputDiv'>
+      <label for='array-input'>Enter process name:</label>
+      <input type="text" name="" id="processName">
+    </div>
+      <div class='inputDiv'>
+      <label for='array-input'>Enter process size:</label>
+      <input type="text" name="" id="processSize">
+    </div>
+      <div class='buttons'>
+      <button onclick="simulate()">Create</button>
+    </div>
+    </div>
+  </div>
+  
+  <div id='column'></div>
+  <div id="displayFrag"><span>Total fragmentation is </span><span id='getFrag'></span></div>
+  <div>
+
+<script type="text/javascript">
+
+const blocks = document.getElementsByClassName("block");
+let check;
+let sum;
+const viewportHeight = window.innerHeight;
+let totalFrag = 0;
+const fragDiv = document.getElementById("getFrag");
+fragDiv.innerHTML = totalFrag;
+
+
+
+window.onload = function() {
+  document.getElementById("array-input").value = "";
+  document.getElementById("processSize").value = "";
+  document.getElementById("processName").value = "";
+};
+
+const removeProcess = ()=>{
+  
+  let index = -1;
+  const text = document.getElementById("processNameRemove");
+  
+  const div = document.getElementById("processRemover");
+  div.style.display = "none";
+  
+  for (let i =0;i<blocks.length;i++){
+    if (blocks[i].firstChild && blocks[i].firstChild.innerHTML === text.value){
+      index = i;
+      break;
+    }
+  }
+  
+  text.value="";
+  
+  if (index === -1){
+    alert("No process with that name!!");
+    return;
+  }
+  
+  totalFrag -= Math.round((parseInt(blocks[index].style.height) - parseInt(blocks[index].firstChild.style.height))*sum / 80);
+  fragDiv.innerHTML = totalFrag;
+  
+  
+  
+  blocks[index].removeChild(blocks[index].firstChild);
+  blocks[index].innerHTML = "";
+  check[index] = 0;
+  
+};
+
+function processArray() {
+  const arrayInput = document.getElementById("array-input").value;
+  if (arrayInput === ""){
+  const dialog_ = document.getElementById("inputError");
+  dialog_.style.display = "block";
+  setTimeout(()=>{
+    dialog_.style.display = "none";
+  },1500);
+    return;
+  }
+  
+  totalFrag = 0;
+  const array = arrayInput.split(" ").map(item => parseInt(item.trim()));
+  sum = array.reduce((partialSum, a) => partialSum + a, 0);
+  check = Array(array.length).fill(0);
+  document.getElementById("array-input").value = "";
+  const column = document.getElementById("column");
+  column.innerHTML = "";
+  
+  array.forEach(size => {
+    const block = document.createElement("div");
+    block.className = "block";
+    block.style.height = (size/sum)*80 + "vh";
+    column.appendChild(block);
+  });
+}
+
+function showProcessCreator(){
+  const column_ = document.getElementById("column");
+  if (column_.innerHTML === "") {
+    alert("Assign some memory first!!");
+    return;
+  }
+  const remove = document.getElementById("processRemover");
+  remove.style.display = "none";
+  const div = document.getElementById("processCreator");
+  div.style.display = "block";
+}
+
+const showProcessRemover = ()=>{
+  const column_ = document.getElementById("column");
+  if (column_.innerHTML === ""){
+    alert("Assign some memory first!!")
+    return;
+  }  
+  const remove = document.getElementById("processCreator");
+  remove.style.display = "none";
+  const div = document.getElementById("processRemover");
+  div.style.display = "block";
+};
+
+const simulate = ()=>{
+  const option_ = document.getElementById("sim");
+  if (option_.selectedIndex == 0) first();
+  else if (option_.selectedIndex == 1) best();
+  else worst();
+};
+
+const first = ()=>{
+  
+  let full = true;
+  for (let i =0;i<check.length;i++){
+    if (check[i] === 0){
+      full = false;
+      break;
+    }
+  }
+  if (full){
+    alert("Memory is full!!");
+    return;
+  }
+  const div = document.getElementById("processCreator");
+  div.style.display = "none";
+  const name = document.getElementById("processName");
+  const size = document.getElementById("processSize");
+
+  const size_ = (size.value)/sum * 80;
+
+  let highlightedIndex = -1;
+  let found = false;
+  
+  function highlightNextBlock() {
+    highlightedIndex++;
+
+    if (highlightedIndex <= blocks.length) {
+      
+      if (highlightedIndex === blocks.length){
+        if (!found){
+          alert("No block can git the given process!!");
+        }
+        return;
+      }
+      const block = blocks[highlightedIndex];
+      if (check[highlightedIndex] === 1){
+          highlightNextBlock();
+          return;
+      }else if (parseInt(block.style.height) >= size_) {
+        const fragmentation = document.createElement("div");
+        fragmentation.className = "frag";
+        fragmentation.innerHTML = name.value;
+        fragmentation.style.height = size_ + "vh";
+        block.appendChild(fragmentation);
+        totalFrag += Math.round((parseInt(block.style.height) - size_)*sum / 80);
+        fragDiv.innerHTML = totalFrag;
+        found = true;
+        check[highlightedIndex] = 1;
+      } else {
+        block.classList.add("highlight");
+        setTimeout(() => {
+          block.classList.remove("highlight");
+          highlightNextBlock();
+        }, 1000);
+        return;
+      }
+    }
+  }
+  highlightNextBlock();
+};
+
+
+const best = ()=>{
+  
+  let full = true;
+  for (let i =0;i<check.length;i++){
+    if (check[i] === 0){
+      full = false;
+      break;
+    }
+  }
+  if (full){
+    alert("memory is full!");
+    return;
+  }
+  const div = document.getElementById("processCreator");
+  div.style.display = "none";
+  const name = document.getElementById("processName");
+  const size = document.getElementById("processSize");
+  
+  const size_ = (size.value)/sum * 80;
+
+  let highlightedIndex = -1;
+
+  let bestFitIndex = -1;
+  let bestFitSize = Infinity;
+  
+  function highlightNextBlock() {
+    highlightedIndex++;
+
+    if (highlightedIndex <= blocks.length) {
+      if (highlightedIndex === blocks.length){
+        if (bestFitIndex === -1){
+          alert("No block can git the given process!!");
+        }else{
+          blocks[bestFitIndex].classList.remove("green");
+          const fragmentation = document.createElement("div");
+          fragmentation.className = "frag";
+          fragmentation.innerHTML = name.value;
+          fragmentation.style.height = size_ + "vh";
+          blocks[bestFitIndex].appendChild(fragmentation);
+          totalFrag += Math.round((parseInt(blocks[bestFitIndex].style.height) - size_)*sum / 80);
+          fragDiv.innerHTML = totalFrag;
+          check[bestFitIndex] = 1;
+        }
+        return;
+      }
+      const block = blocks[highlightedIndex];
+      if (check[highlightedIndex] === 1){
+          highlightNextBlock();
+          return;
+      }else if (parseInt(block.style.height) >= parseInt(size_) && parseInt(block.style.height) < bestFitSize) {
+        if (bestFitIndex !== -1){
+          blocks[bestFitIndex].classList.remove("green");
+        }
+        setTimeout(() => {
+          highlightNextBlock();
+        }, 500);
+        block.classList.add("green");
+        bestFitSize = parseInt(block.style.height);
+        bestFitIndex = highlightedIndex;
+      } else {
+        block.classList.add("highlight");
+        setTimeout(() => {
+          block.classList.remove("highlight");
+          highlightNextBlock();
+        }, 1000);
+        return;
+      }
+    }
+  }
+  highlightNextBlock();
+};
+
+const worst = ()=>{
+
+  let full = true;
+  for (let i =0;i<check.length;i++){
+    if (check[i] === 0){
+      full = false;
+      break;
+    }
+  }
+  if (full){
+    alert("memory is full!");
+    return;
+  }
+  const div = document.getElementById("processCreator");
+  div.style.display = "none";
+  const name = document.getElementById("processName");
+  const size = document.getElementById("processSize");
+  const size_ = (size.value)/sum * 80;
+
+  let highlightedIndex = -1;
+
+  let worstFitIndex = -1;
+  let worstFitSize = -Infinity;
+  
+  function highlightNextBlock() {
+    highlightedIndex++;
+
+    if (highlightedIndex <= blocks.length) {
+      
+      if (highlightedIndex === blocks.length){
+        if (worstFitIndex === -1){
+          alert("No block can git the given process!!");
+        }else{
+          blocks[worstFitIndex].classList.remove("green");
+          const fragmentation = document.createElement("div");
+          fragmentation.className = "frag";
+          fragmentation.innerHTML = name.value;
+          fragmentation.style.height = size_ + "vh";
+          blocks[worstFitIndex].appendChild(fragmentation);
+          totalFrag += Math.round((parseInt(blocks[worstFitIndex].style.height) - size_)*sum / 80);
+          fragDiv.innerHTML = totalFrag;
+          check[worstFitIndex] = 1;
+        }
+        return;
+      }
+      const block = blocks[highlightedIndex];
+      if (check[highlightedIndex] === 1){
+          highlightNextBlock();
+          return;
+      }else if (parseInt(block.style.height) >= parseInt(size_) && parseInt(block.style.height) > worstFitSize) {
+        if (worstFitIndex !== -1){
+          blocks[worstFitIndex].classList.remove("green");
+        }
+        block.classList.add("highlight");
+        setTimeout(() => {
+          block.classList.remove("highlight");
+          highlightNextBlock();
+        }, 500);
+        block.classList.add("green");
+        worstFitSize = parseInt(block.style.height);
+        worstFitIndex = highlightedIndex;
+      } else {
+        block.classList.add("highlight");
+        setTimeout(() => {
+          block.classList.remove("highlight");
+          highlightNextBlock();
+        }, 1000);
+      }
+    }
+  }
+  highlightNextBlock();
+};
+
+</script>
+</body>
+</html>
