@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Readers-Writers Problem Simulation</title>
+  <style>
+    body {
+      background-color: #f2f2f2;
+      margin: 0;
+      padding: 20px;
+      font-family: Arial, sans-serif;
+    }
+
+    .container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .panel {
+      background-color: #f9f9f9;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 20px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      max-width: 700px;
+      /* Adjusted max-width */
+      width: 70%;
+      /* Changed width to 70% */
+      margin: 0 auto;
+      /* Added margin to center the panel */
+    }
+
+
+    .heading {
+      font-size: 24px;
+      font-weight: bold;
+      margin-bottom: 20px;
+    }
+
+    .button {
+      padding: 10px 20px;
+      font-size: 18px;
+      margin: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      outline: none;
+      background-color: pink;
+      color: white;
+    }
+
+    .button:hover {
+      background-color: #45a049;
+    }
+
+    .reader.active {
+      background-color: #FF0000;
+    }
+
+    .reader.active:hover {
+      background-color: #c70000;
+    }
+
+    .writer {
+      background-color: red;
+    }
+
+    .writer:hover {
+      background-color: #660066;
+    }
+
+    .writer.active {
+      background-color: #8B4513;
+    }
+
+    .writer.active:hover {
+      background-color: #6e3e0e;
+    }
+
+    .output {
+      margin-top: 20px;
+      width: 100%;
+      height: 200px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      overflow-y: scroll;
+      padding: 10px;
+    }
+
+    .text-section {
+      width: 100%;
+      margin-bottom: 20px;
+    }
+
+    .text-area {
+      width: 100%;
+      height: 200px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      padding: 10px;
+      resize: none;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="panel">
+      <h1 class="heading">Readers-Writers Problem</h1>
+      <div class="text-section">
+        <textarea class="text-area" id="sharedMemory" placeholder="Database to be Accessed" disabled></textarea>
+      </div>
+      <button class="button reader" onclick="toggleReader(1)">Start/Stop Reader 1</button>
+      <button class="button reader" onclick="toggleReader(2)">Start/Stop Reader 2</button>
+      <button class="button reader" onclick="toggleReader(3)">Start/Stop Reader 3</button>
+      <button class="button writer" onclick="toggleWriter()">Start/Stop Writer</button>
+      <div class="output" id="output"></div>
+    </div>
+  </div>
+
+  <script>
+    let readerStarted = [false, false, false];
+    let writerStarted = false;
+    let sharedText = '';
+    let outputElement;
+
+    window.addEventListener('DOMContentLoaded', function () {
+      outputElement = document.getElementById('output');
+    });
+
+    function toggleReader(readerNumber) {
+      if (writerStarted) {
+        writeToOutput('Cannot start reader until writer has finished');
+        return;
+      }
+
+      readerStarted[readerNumber - 1] = !readerStarted[readerNumber - 1];
+
+      if (readerStarted[readerNumber - 1]) {
+        const readerButton = document.querySelectorAll('.reader')[readerNumber - 1];
+        readerButton.classList.add('active');
+        readerButton.textContent = `Stop Reader ${readerNumber}`;
+
+        writeToOutput(`Reader ${readerNumber} has started`);
+        const sharedMemory = document.getElementById('sharedMemory');
+        sharedText = sharedMemory.value;
+        writeToOutput(`Text: ${sharedText}`);
+      } else {
+        const readerButton = document.querySelectorAll('.reader')[readerNumber - 1];
+        readerButton.classList.remove('active');
+        readerButton.textContent = `Start Reader ${readerNumber}`;
+
+        writeToOutput(`Reader ${readerNumber} has finished`);
+      }
+    }
+
+    function toggleWriter() {
+      if (readerStarted.some((reader) => reader)) {
+        writeToOutput('Cannot start writer until all readers have finished');
+        return;
+      }
+
+      writerStarted = !writerStarted;
+
+      const writerButton = document.querySelector('.writer');
+      const writerInput = document.getElementById('sharedMemory');
+      writerInput.disabled = !writerStarted;
+
+      if (writerStarted) {
+        writeToOutput('Writer has started');
+        writerButton.classList.add('active');
+        writerButton.textContent = 'Stop Writer';
+      } else {
+        writeToOutput('Writer has finished');
+        writerButton.classList.remove('active');
+        writerButton.textContent = 'Start Writer';
+        sharedText = writerInput.value;
+      }
+    }
+
+    function writeToOutput(message) {
+      outputElement.innerHTML += `<p>${message}</p>`;
+      outputElement.scrollTop = outputElement.scrollHeight;
+    }
+  </script>
+</body>
+
+</html>

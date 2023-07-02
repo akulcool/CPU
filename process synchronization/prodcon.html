@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Producer-Consumer Simulation</title>
+    <style>
+         .circles {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.circles li {
+  position: absolute;
+  display: block;
+  list-style: none;
+  width: 20px;
+  /* border-radius: 50%!important; */
+  height: 20px;
+  background: pink;
+  animation: animate 25s linear infinite;
+  bottom: -150px;
+}
+
+.circles li:nth-child(1) {
+  left: 5%;
+  width: 50px;
+  height: 50px;
+  animation-delay: 0s;
+}
+
+.circles li:nth-child(2) {
+  left: 10%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 2s;
+  animation-duration: 12s;
+}
+
+.circles li:nth-child(3) {
+  left: 6%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 4s;
+}
+
+.circles li:nth-child(4) {
+  left: 89%;
+  width: 60px;
+  height: 60px;
+  animation-delay: 0s;
+  animation-duration: 18s;
+}
+
+.circles li:nth-child(5) {
+  left: 90%;
+  width: 20px;
+  height: 20px;
+  animation-delay: 0s;
+}
+
+.circles li:nth-child(6) {
+  left: 85%;
+  width: 10px;
+  height: 10px;
+  animation-delay: 3s;
+}
+
+.circles li:nth-child(7) {
+  left: 5%;
+  width: 50px;
+  height: 50px;
+  animation-delay: 7s;
+}
+
+.circles li:nth-child(8) {
+  left: 10%;
+  width: 25px;
+  height: 25px;
+  animation-delay: 15s;
+  animation-duration: 45s;
+}
+
+.circles li:nth-child(9) {
+  left: 100%;
+  width: 15px;
+  height: 15px;
+  animation-delay: 2s;
+  animation-duration: 35s;
+}
+
+.circles li:nth-child(10) {
+  left: 95%;
+  width: 50px;
+  height: 50px;
+  animation-delay: 0s;
+  animation-duration: 11s;
+}
+
+        html, body {
+            height: 100%;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f2f2f2; 
+        }
+        .container {
+            text-align: center;
+        }
+        #buffer {
+            width: 400px;
+            height: 200px;
+            border: 1px solid black;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: center;
+            margin: 20px auto;
+        }
+        .item {
+            width: 40px;
+            height: 40px;
+            background-color: pink;
+            border: 1px solid black;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-weight: bold;
+            margin: 5px;
+        }
+        #controls {
+            margin: 20px auto;
+        }
+        button {
+            margin: 0 10px;
+            font-size: 16px;
+            padding: 10px 20px;
+            border-radius: 5px;
+            background-color: pink;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #status {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+   
+<div class="container">
+      <ul class="circles">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+    </div>
+
+
+    <div class="container">
+        <h1>Producer-Consumer Simulation</h1>
+        <label for="bufferSize">Maximum Buffer Size:</label>
+        <input type="number" id="bufferSize" min="1" value="10" onchange="updateBufferSize()">
+        <div id="buffer"></div>
+        <div id="controls">
+            <button onclick="toggleProducer()">Toggle Producer</button>
+            <button onclick="toggleConsumer()">Toggle Consumer</button>
+        </div>
+        <div id="status"></div>
+    </div>
+
+    <script>
+        var buffer = [];
+        var bufferSizeInput = document.getElementById("bufferSize");
+        var bufferSize = parseInt(bufferSizeInput.value);
+        var producerIntervalId;
+        var consumerIntervalId;
+        var producerRunning = false;
+        var consumerRunning = false;
+        var statusElement = document.getElementById("status");
+        var originalStatus = statusElement.textContent;
+        var currentNumber = 1;
+
+        // Update buffer size
+        function updateBufferSize() {
+            bufferSize = parseInt(bufferSizeInput.value);
+        }
+
+        // Producer function
+        function producer() {
+            if (buffer.length < bufferSize) {
+                buffer.push(currentNumber);
+
+                // Display item in buffer
+                var itemElement = document.createElement("div");
+                itemElement.className = "item";
+                itemElement.textContent = currentNumber;
+                document.getElementById("buffer").appendChild(itemElement);
+
+                currentNumber++;
+            } else {
+                stopProducer();
+                showStatus("Buffer is full");
+
+                // Restore original status after 1 second
+                setTimeout(function() {
+                    showStatus(originalStatus);
+                }, 1000);
+            }
+        }
+
+        // Consumer function
+        function consumer() {
+            if (buffer.length > 0) {
+                var item = buffer.shift();
+
+                // Remove item from buffer display
+                var bufferElement = document.getElementById("buffer");
+                bufferElement.removeChild(bufferElement.firstChild);
+            } else {
+                showStatus("Buffer is empty");
+
+                // Restore original status after 1 second
+                setTimeout(function() {
+                    showStatus(originalStatus);
+                }, 1000);
+            }
+        }
+
+        // Toggle producer
+        function toggleProducer() {
+            if (!consumerRunning) {
+                if (!producerRunning) {
+                    producerIntervalId = setInterval(producer, 1000);
+                    producerRunning = true;
+                    showStatus("Producer is running");
+                } else {
+                    stopProducer();
+                }
+            } else {
+                showStatus("Cannot start producer while consumer is running");
+
+                // Restore original status after 1 second
+                setTimeout(function() {
+                    showStatus(originalStatus);
+                }, 1000);
+            }
+        }
+
+        // Stop producer
+        function stopProducer() {
+            clearInterval(producerIntervalId);
+            producerRunning = false;
+            showStatus("Producer is stopped");
+        }
+
+        // Toggle consumer
+        function toggleConsumer() {
+            if (!producerRunning) {
+                if (!consumerRunning) {
+                    consumerIntervalId = setInterval(consumer, 2000);
+                    consumerRunning = true;
+                    showStatus("Consumer is running");
+                } else {
+                    clearInterval(consumerIntervalId);
+                    consumerRunning = false;
+                    showStatus("Consumer is stopped");
+                }
+            } else {
+                showStatus("Cannot start consumer while producer is running");
+
+                // Restore original status after 1 second
+                setTimeout(function() {
+                    showStatus(originalStatus);
+                }, 1000);
+            }
+        }
+
+        // Show status message
+        function showStatus(message) {
+            statusElement.textContent = message;
+        }
+    </script>
+</body>
+</html>
